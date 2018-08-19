@@ -1,0 +1,210 @@
+a.) A description of the design of your data structures. For example, how do you represent the board? How do you record shots made? 
+
+Board is represented with a fixed 10x10 character array. It is initialized with periods. If there is a missed attack, the character of that position turns to ‘o’. If the attack hit something, it turns to ‘X’. Ships are placed on with various other characters. This array is how shots are recorded. Board also has a structure called Info that stores the ship ID, length, point (leftmost or topmost) placed, and direction of the ship. It also has a vector of Info that keeps track of all placed ships, so I can check if a ship has been placed yet or not.
+
+Game has two integers that represent the number of rows and number of columns in the game. The board class refers to these to initialize its board accordingly. Game also has a structure Ship that has an integer for length, string for name, and character for symbol. There is a vector of Ships. The ships are placed so that the first one pushed back will have ID 0, the next will have ID 1, etc. The vector and structure are used to output ship information from ID number input. 
+
+HumanPlayer has no data structures. Nothing is needed since the human stores everything.
+
+MediocrePlayer has a 10x10 integer array initialized with zeros that represents the board of the opponent. If an attack was made there, the position turns to 1. This prevents the player from taking a shot where one was already taken. MediocrePlayer has an array of 100 ints that holds the ship ID’s in order from greatest largest to smallest. When placing ships, it uses the array to place the the largest ships first to save time.  
+MediocrePlayer also has integer called state that keeps track of the state of the player. It has two state: 1 and 2. One for attacking random positions, another for honing in onto one ship. To help the second state, there is a point called core that holds the point that was first attacked and hit something when state = 1. There is also an integer called hunt that holds the number of valid coordinates to hit around the core (the 9x9 cross). Every time one is hit, hunt decreases. Hunt is checked in case the cross does not sink the ship (if the ship is length 6 or more). 
+
+GoodPlayer has a lowestis2 boolean that is true if the lowest ship has length 2 or more. There is also a 10x10 integer array initialized with zeros that represents the board of the opponent. It keeps track of all attacks. This prevents the player from taking a shot where one was already taken. Specifically, a miss is represented by 1, a hit but not sink is 2, and a sink is 3. GoodPlayer has an array of 100 ints that holds the ship ID’s in order from greatest largest to smallest. When placing ships, it uses the array to place the the largest ships first to save time.  
+GoodPlayer also has integer called state that keeps track of the state of the player. It has three state: 1, 2, and 3. One for attacking semi-random checkerboard positions, another for finding the direction of a ship, and the last one for finishing off the ship. To help the last two states, there are two point called ep1 and ep2 that represent the ends of the ship and two booleans called end1 and end2 that represent whether the end has been reached yet. ep1 and ep2 are updated with there is a hit, and end1 and end2 are updated with ep1 and ep2 reach the boundary or a point that has already been attacked. There is a boolean called weird for the special case when the length attacked does not equal the length of the sunken ship or when both ends are reached but the ship has not sunk. 
+
+
+
+
+
+b.) A prose description of your GoodPlayer's strategies for placing ships and recommending moves. If they're easy to describe, this may well be only a paragraph or two. This is a high-level summary; details go in the pseudocode. 
+
+GoodPlayer places ships the same way MediocrePlayer does. When recommending moves, GoodPlayer has three stages with a boolean condition. The first stage is random firing. Since MediocrePlayer tends to place its ships in the upper half of the board, the first 15 turns, GoodPlayer focuses only on the upper half. Furthermore, it fires in a checkerboard pattern if the smallest ship has length 2 or more. Once it hits something, GoodPlayer switches to state 2 which is figuring out the direction of the ship it hit. It goes around that point until it hits something which determines the direction. Once the direction is set, it moves to stage 3 which specializes in the direction. First, it finds the topmost or leftmost end of the ship. Once that is found, it moves to find the bottommost or rightmost end. Once it sinks, it updates the board that a ship of the length from the ship ID was sunk. If there are no more parts on the board that were attacked but not sunk, GoodPlayer returns to state 1 and starts over. However, there are times when the length of the area attacked does not match the length of the ship sunk (when two ships are touching end to end). In this case, the weird boolean becomes true, and GodPlayer selects a point that was attacked but not sunk, makes it the center point, and returns to state 2. Again, it finds the direction and follows it until the ship is sunk. The length is compared again. Once there are no more attacks with no sinks, the boolean weird is turned off, and GoodPlayer returns to state 1. In stage 3, if both ends are reached, but no ship has sunk, the boolean weird becomes true (parallel ships side by side), and the process above follows. 
+
+
+
+
+
+c. Pseudocode for non-trivial algorithms. For example, how does a MediocrePlayer place ships? How does your GoodPlayer implement its strategies? 
+
+bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
+Check if the ID is valid
+Check if the ship has already been placed
+Check if point is valid
+If direction is horizontal
+	Check if the ship goes off right side of the board
+	Check if the there are ships or blocks blocking the path
+	Place the ship horizontally
+If direction is vertical
+	Check if the ship goes off bottom side of the board
+	Check if the there are ships or blocks blocking the path
+	Place the ship vertically
+Record that the ship has been placed
+
+bool BoardImpl::unplaceShip(Point topOrLeft, int shipId, Direction dir)
+Check if point is valid
+Check if the ship has already been placed
+Check if the ship matches the direction
+If direction is horizontal
+	Check if the path covers the entire ship
+	Replace the ship with water horizontally
+If direction is vertical
+	Check if the path covers the entire ship
+	Replace the ship with water vertically
+Record that the ship has been placed
+
+bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
+Check if the point is valid
+If there is a ship at that position
+	shotHit is true
+	Update vector of Info of ships
+	If the entire ship was destroyed
+		shipDestroyed is true
+		shipID is the ID of the sunken ship
+	Else shipDestroyed is false
+	Record attack as a hit
+Else shotHit, shipDestroyed are both false
+	Record attack as a miss
+
+bool BoardImpl::allShipsDestroyed() const
+Go through vector of Info on ships
+	If all are sunk
+		Return true
+	Else return false		
+
+Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause)
+Place p1 ships on b1
+Place p2 ships on b2
+If unable to, return false
+Repeatedly
+	Display b2
+	Let p1 attack
+	Display b2 with attack result
+	If all b2 ships are sunk
+		Return p1
+	If shouldPause is true
+		Wait till user enters
+	Display b1
+	Let p2 attack
+	Display b1 with attack result
+	If all b1 ships are sunk
+		Return p2
+	If shouldPause is true
+		Wait till user enters
+
+bool MediocrePlayer::helper(int ID, Board& b) //the recursive function for placeShips
+If ID is invalid
+	Return true
+For each grid position
+	If able to place ship of ID horizontally or vertically
+		If able to place ship of ID one greater
+			Return true
+		Else unplace ship of ID
+Return false
+
+bool MediocrePlayer::placeShips(Board& b)
+Place ships in order from greatest to least
+Repeatedly for 50 times
+	Block the board
+	If helper function is true
+		Unblock the board
+		Return true
+	Else unblock the board
+Return false
+
+Point MediocrePlayer::recommendAttack()
+If currently in state 1
+	Repeatedly
+		Pick a random point on the grid
+		If it hasn’t been attacked before
+			Break
+Else if in state 2
+	Repeatedly
+		Either pick a point on the vertical of the cross
+		Or pick a point on the horizontal of the cross
+		If it hasn’t been attacked before
+			Break
+Record that the point has been chosen
+Return point
+
+void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit,
+                                        bool shipDestroyed, int shipId)
+If shot hit something
+	If a ship was destroyed 
+		Go back to state 1
+		Return
+	Else if state is currently 1
+		Make current point the core of the cross
+		Count how many valid points are in the cross
+		Turn state to 2
+	If all point in the cross have been hit
+		Go back to state 1
+		Return
+
+bool GoodPlayer::helper(int ID, Board& b) //same as MediocrePlayer
+
+bool MediocrePlayer::placeShips(Board& b)//same as MediocrePlayer
+
+Point GoodPlayer::recommendAttack()
+If state is currently 1
+	If still under 15 turns	
+		If the checkerboard pattern isn’t used out		
+			Select a random checkered point in the upper half of the board
+		Else select a random point in the upper half of the board
+	If the checkerboard pattern isn’t used out
+		Select a random checkered point on the board
+	Else select a random point on the board
+	Return point
+Else if state is currently 3
+	If direction is horizontal
+		If the leftmost end hasn’t been reached yet
+			Return the leftmost point
+		Else if the rightmost end hasn’t been reached yet
+			Return the rightmost point
+	Else if direction is vertical
+		If the uppermost end hasn’t been reached yet
+			Return the uppermost point
+		Else if the lowermost end hasn’t been reached yet
+			Return the lowermost point
+	If both ends have been reached
+		Activate weird condition 
+		Go to state 2
+If state is 2
+	If in weird condition
+		Select a point that has been attacked but not sunk
+	Return a valid point around a cross
+	If no valid points
+		Activate weird condition
+			Return random point on board
+
+void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit,
+                                    bool shipDestroyed, int shipId)
+If shot is not valid
+	Return
+If shot hit something
+	If ship was destroyed
+		If direction is horizontal
+			Record horizontal sunken parts onto 2D array
+		Else if direction is vertical
+			Record vertical sunken parts onto 2D array
+		If in weird condition
+		Check the 2D for parts of unsunken ships
+		If none found
+			Exit out of weird condition
+			Return to state 1
+		Else
+			Return to state 2
+	Else if no ship was destroyed
+		Record unsunken ship part on 2D array
+		If currently in state 1
+			Go into state 2
+		Else if currently in state 2
+			Determine ship direction
+			Set state to 3
+		If state is 3
+			Check if the leftmost or topmost end has been reached
+			Check if the rightmost or bottommost end has been reached
+		Update endpoints
+		If both ends have been reached
+			Activate weird condition
+			Return to state 2
+Else record miss on 2D array
