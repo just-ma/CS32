@@ -1,0 +1,134 @@
+This doubly linked list has a head pointer pointing at the first important node. If the list is empty, the head is null. The first node’s previous pointer and the last node’s next pointer are null. The list is ordered from least to greatest. There is an integer that keeps track of its size.
+
+INSERT FUNCTION
+If Set is empty or if the value is less than the first node
+	insert node into the beginning 
+	return true
+else
+	Go through each node
+		if you find the value you are trying to input
+			return false
+		else input node so that set increments in order
+			return true
+
+ERASE FUNCTION
+If Set is not empty
+	Go through each node
+		if you find the value you are trying to erase
+			erase node and return true
+else if you don’t find your value or the set is empty
+	return false
+
+CONTAIN FUNCTION
+If Set is not empty
+	Go through each node
+		If you find the value you are looking for
+			return true
+else if you don’t find your value or the set is empty
+	return false
+
+GET FUNCTION
+If Set is not empty and the number you want fits in the range of the set
+	Go to how large of a value you want directly(Set is incremental)
+		copy that value and return true
+else if set is empty or the range of the Set is too small
+	return false
+
+SWAP FUNCTION
+Create a new pointer node
+Let the node point to the things the head of one function points to
+Let that function’s head point to the things the second function’s head points to
+Let the second function’s head point to what the new node points to
+Swap sizes
+
+UNITE FUNCTION
+if the result set is not the first nor the second set
+	clear the contents of the result set
+insert contents of the first set into the result
+for each object in second set
+	insert contests that aren't duplicates into the results set
+
+SUBTRACT FUNCTION
+if the result set is not the first nor the second set
+	clear the contents of the results set
+insert contents of the first set into the result
+for each object in second set
+	delete contests that are duplicates from the results set
+
+
+    Set yea;
+    ItemType a = "music";
+    assert(yea.size() == 0); //initial size should be 0
+    assert(yea.insert(a)); //inserting into empty set
+    
+    assert(yea.size() == 1); //size increments
+    assert(!yea.insert("music")); //does not insert something that is already inside the set
+    assert(yea.size() == 1); //size remains when insert function fails
+    assert(yea.insert("apple"));
+    assert(yea.insert("dog")); //confirms all these inserts
+    assert(yea.insert("fish"));
+    assert(yea.insert("cat"));
+    assert(yea.size() == 5); //size should be 5
+    
+    assert(yea.get(0,a) && a == "apple"); //first element should be "apple" and so on...
+    assert(yea.get(1,a) && a == "cat");
+    assert(yea.get(2,a) && a == "dog");
+    assert(yea.get(3,a) && a == "fish");
+    assert(yea.get(4,a) && a == "music");
+    assert(!yea.get(5,a) && a == "music"); //get function shouldnt work when input is outside range
+    
+    assert(!yea.erase(“king”)); //erase should not work when object is not present in set
+    assert(yea.erase("dog")); //test erase function
+    assert(yea.size()==4); //size decreases after successful erase
+    assert(yea.get(2,a) && a=="fish"); //next number replaces erased one
+    
+    assert(!yea.contains("dog")); //tests contains function
+    assert(yea.contains("apple") && yea.contains("cat") && yea.contains("fish") && yea.contains("music"));
+    
+    Set no; //new set
+    assert(no.insert("apple"));
+    assert(no.insert("bat"));
+    assert(no.insert("lion"));
+    assert(no.insert("cat"));
+    assert(no.insert("goat")); //initialize set
+    
+    no.swap(yea); //swaps two sets
+    assert(no.size()==4); //test if the sizes are swapped
+    assert(yea.size()==5);
+    
+    assert(no.get(0,a) && a == "apple"); //test the content of the sets...
+    assert(no.get(1,a) && a == "cat");
+    assert(no.get(2,a) && a == "fish");
+    assert(no.get(3,a) && a == "music");
+    assert(!no.get(4,a) && a == "music"); //nothing past the last node
+    
+    assert(yea.get(0,a) && a == "apple");
+    assert(yea.get(1,a) && a == "bat");
+    assert(yea.get(2,a) && a == "cat");
+    assert(yea.get(3,a) && a == "goat");
+    assert(yea.get(4,a) && a == "lion");
+    assert(!yea.get(5,a) && a == "lion");//nothing past the last node
+    
+    Set ok(yea); //initializes set
+    assert(ok.size()==5); //see if the size translates with the set
+    assert(ok.get(0,a) && a == "apple"); //check the contents
+    assert(ok.get(1,a) && a == "bat");
+    assert(ok.get(2,a) && a == "cat");
+    assert(ok.get(3,a) && a == "goat");
+    assert(ok.get(4,a) && a == "lion");
+    assert(!ok.get(5,a) && a == "lion");
+    
+    assert(yea.erase("apple"));
+    assert(ok.size()==5); // remains same after the other set changes
+    
+    Set ko = no; //initializes set with = operator
+    assert(ko.size()==4); //see if size translates with set
+    
+    assert(ko.get(0,a) && a == "apple"); //check the contents of the set
+    assert(ko.get(1,a) && a == "cat");
+    assert(ko.get(2,a) && a == "fish");
+    assert(ko.get(3,a) && a == "music");
+    assert(!ko.get(4,a) && a == "music");
+    
+    assert(no.erase("cat"));
+    assert(ko.size()==4); //set remains after the other set changes
